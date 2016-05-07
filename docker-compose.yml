@@ -5,7 +5,7 @@ services:
     image: nsqio/nsq
     volumes:
       - ./data/nsq:/data
-    command: [/nsqd, --broadcast-address=nsqd:4171, --lookupd-tcp-address=nsqlookup:4160, --data-path=/data]
+    command: ["/nsqd", "--broadcast-address=nsqd:4171", "--lookupd-tcp-address=nsqlookup:4160", "--data-path=/data"]
     depends_on:
       - nsqlookup
 
@@ -15,7 +15,7 @@ services:
 
   nsqadmin:
     image: nsqio/nsq
-    command: [/nsqadmin, --http-address=0.0.0.0:4171, --lookupd-http-address=nsqlookup:4161]
+    command: ["/nsqadmin", "--http-address=0.0.0.0:4171", "--lookupd-http-address=nsqlookup:4161"]
     depends_on:
       - nsqlookup
 
@@ -33,9 +33,12 @@ services:
 
   web:
     build: .
+    command: ["npm", "start"]
     image: node:latest
     ports:
       - 8080:8080
+    volumes:
+      - ./data/node_modules:/usr/src/app/node_modules
     depends_on:
       - nsqd
       - nsqlookup

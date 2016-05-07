@@ -1,11 +1,9 @@
-FROM node:latest
+FROM node:6.1
 
 RUN mkdir -p /usr/src/app
+
 WORKDIR /usr/src/app
 
-EXPOSE 8080
-
 COPY . /usr/src/app
-RUN npm install
-
+EXPOSE 8080
 CMD ["npm", "start"]
