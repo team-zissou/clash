@@ -1,0 +1,43 @@
+version: '2'
+
+services:
+  nsqd:
+    image: nsqio/nsq
+    volumes:
+      - ./data/nsq:/data
+    command: [/nsqd, --broadcast-address=nsqd:4171, --lookupd-tcp-address=nsqlookup:4160, --data-path=/data]
+    depends_on:
+      - nsqlookup
+
+  nsqlookup:
+    image: nsqio/nsq
+    command: [/nsqlookupd]
+
+  nsqadmin:
+    image: nsqio/nsq
+    command: [/nsqadmin, --http-address=0.0.0.0:4171, --lookupd-http-address=nsqlookup:4161]
+    depends_on:
+      - nsqlookup
+
+  rethinkdb:
+    image: rethinkdb:latest
+    volumes:
+      - ./data/rethinkdb:/rethinkdb/data
+
+  couchbase:
+    image: couchbase/server
+    volumes:
+      - ./data/couchbase:/opt/couchbase/var
+    ports:
+      - 8091:8091
+
+  web:
+    build: .
+    image: node:latest
+    ports:
+      - 8080:8080
+    depends_on:
+      - nsqd
+      - nsqlookup
+      - rethinkdb
+      - couchbase
