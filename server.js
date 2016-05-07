@@ -8,8 +8,9 @@ const r = require('rethinkdb');
 
 let conn;
 const nsqd_host = process.env.NSQD_HOST;
+const dockerhost = process.env.dockerhost;
 
-r.connect({host:'192.168.99.100', db:'test'}, (err, c) => {
+r.connect({host:dockerhost, db:'test'}, (err, c) => {
   if (err) {
     console.error(err);
     process.exit(1);
@@ -31,7 +32,6 @@ app.use(function readBody (req, res, next) {
         next();
     });
 });
-
 
 router.post('/todos', (req, res) => {
   let body = req.body;

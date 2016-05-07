@@ -5,7 +5,7 @@ services:
     image: nsqio/nsq
     volumes:
       - ./data/nsq:/data
-    command: ["/nsqd", "--broadcast-address=192.168.99.100:4171", "--lookupd-tcp-address=192.168.99.100:4160", "--data-path=/data"]
+    command: ["/nsqd", "--broadcast-address=127.0.0.1:4171", "--lookupd-tcp-address=nsqlookup:4160", "--data-path=/data"]
     depends_on:
       - nsqlookup
     ports:
@@ -21,7 +21,7 @@ services:
 
   nsqadmin:
     image: nsqio/nsq
-    command: ["/nsqadmin", "--http-address=0.0.0.0:4171", "--lookupd-http-address=127.0.0.1:4161"]
+    command: ["/nsqadmin", "--http-address=0.0.0.0:4171", "--lookupd-http-address=nsqlookup:4161"]
     depends_on:
       - nsqlookup
     ports:
