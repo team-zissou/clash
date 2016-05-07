@@ -5,42 +5,40 @@ services:
     image: nsqio/nsq
     volumes:
       - ./data/nsq:/data
-    command: ["/nsqd", "--broadcast-address=nsqd:4171", "--lookupd-tcp-address=nsqlookup:4160", "--data-path=/data"]
+    command: ["/nsqd", "--broadcast-address=127.0.0.1:4171", "--lookupd-tcp-address=127.0.0.1:4160", "--data-path=/data"]
     depends_on:
       - nsqlookup
+    ports:
+      - 4150:4150
+      - 4151:4151
 
   nsqlookup:
     image: nsqio/nsq
-    command: [/nsqlookupd]
+    command: ["/nsqlookupd"]
+    ports:
+      - 4160:4160
+      - 4161:4161
 
   nsqadmin:
     image: nsqio/nsq
-    command: ["/nsqadmin", "--http-address=0.0.0.0:4171", "--lookupd-http-address=nsqlookup:4161"]
+    command: ["/nsqadmin", "--http-address=0.0.0.0:4171", "--lookupd-http-address=127.0.0.1:4161"]
     depends_on:
       - nsqlookup
+    ports:
+      - 4171:4171
 
   rethinkdb:
     image: rethinkdb:latest
     volumes:
       - ./data/rethinkdb:/rethinkdb/data
+    ports:
+      - 28015:28015
+      - 8081:8080
 
   couchbase:
     image: couchbase/server
     volumes:
       - ./data/couchbase:/opt/couchbase/var
     ports:
-      - 8091:8091
-
-  web:
-    build: .
-    command: ["npm", "start"]
-    image: node:latest
-    ports:
-      - 8080:8080
-    volumes:
-      - ./data/node_modules:/usr/src/app/node_modules
-    depends_on:
-      - nsqd
-      - nsqlookup
-      - rethinkdb
-      - couchbase
+      - 8091-8093:8091-8093
+      - 11210:11210

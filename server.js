@@ -4,39 +4,62 @@ const uuid = require('node-uuid');
 const bodyParser = require('body-parser');
 const couchbase = require('couchbase');
 const nsq = require('nsq.js');
+const r = require('rethinkdb');
 
-const router = express.Router();
-const app = express();
-app.use(bodyParser());
-
+let conn;
 const nsqd_host = process.env.NSQD_HOST;
 
-let todos = [
-  createTodo("add uuid to packages"),
-  createTodo("install packages"),
-  createTodo("change server port"),
-];
+r.connect({host:'127.0.0.1', db:'test'}, (err, c) => {
+  if (err) {
+    console.error(err);
+    process.exit(1);
+  }
+  conn = c;
+});
 
-function createTodo(todo) {
-  return {
-    id: uuid.v4(),
-    todo,
-  };
-}
+const app = express();
+const router = express.Router();
+
+app.use(function readBody (req, res, next) {
+    var data = '';
+    req.setEncoding('utf8');
+    req.on('data', function(chunk) {
+        data += chunk;
+    });
+    req.on('end', function() {
+        req.body = data;
+        next();
+    });
+});
+
+
+router.post('/todos', (req, res) => {
+  let body = req.body;
+  r.table('todos').insert({todo: body}).run(conn, (err, row) => {
+    res.send(row.generated_keys[0])
+  });
+});
 
 router.get('/todos/:id', (req, res) => {
   const { id } = req.params;
-  let match = todos.filter(x => x.id === id);
-  res.json(match);
+  let todos = [];
+  r.table('todos').filter({id}).run(conn, (err, cursor) => {
+    cursor.toArray((err, arr) => {
+      res.json(arr);
+    });
+  });
 });
 
 router.get('/todos', (req, res) => {
-  res.json(todos);
+  r.table('todos').run(conn, (err, cursor) => {
+    cursor.toArray((err, arr) => {
+      res.json(arr);
+    });
+  })
 });
 
 router.post('/run/:language', (req, res) => {
   const { langauge } = req.params;
-
 });
 
 app.use(express.static('public'));
