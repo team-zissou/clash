@@ -9,7 +9,7 @@ const r = require('rethinkdb');
 let conn;
 const nsqd_host = process.env.NSQD_HOST;
 
-r.connect({host:'127.0.0.1', db:'test'}, (err, c) => {
+r.connect({host:'192.168.99.100', db:'test'}, (err, c) => {
   if (err) {
     console.error(err);
     process.exit(1);

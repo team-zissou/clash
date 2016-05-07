@@ -24,3 +24,7 @@ erl_crash.dump
 *.ez
 
 data
+*.sln
+.suo
+*.njsproj
+.vs/
