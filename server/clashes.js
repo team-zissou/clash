@@ -2,18 +2,18 @@ const r = require('rethinkdb');
 const uuid = require('node-uuid');
 
 const subscribe = withConnection((conn, {ws}) => {
-
-  const closeConn = () => conn.close()
-
-  const pushClash = (err, {new_val}) => {
+  const pushClash = (err, row) => {
     if (err) {
-      console.error(err)
+      console.log(err)
       return
     }
+
+    const { new_val } = row
     if (!new_val) {
       console.error("clash missing new_val")
       return
     }
+
     ws.send(JSON.stringify(Object.assign({}, {clash: new_val}, {type: "CLASH_CREATED"})))
   }
 
@@ -22,6 +22,15 @@ const subscribe = withConnection((conn, {ws}) => {
       console.error(err)
       return
     }
+
+    const closeConn = () => {
+      console.log("closed rethinkdb conn")
+      cursor.close()
+      conn.close()
+    }
+
+    //when socket d/cs we need to stop the cursor before the connection
+    ws.on('close', closeConn)
     cursor.each(pushClash, closeConn)
   }
 
