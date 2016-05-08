@@ -9,6 +9,7 @@ import { connectWebsocket } from './actions'
 
 import App from './containers/App'
 import RecentClashes from './containers/RecentClashes'
+import Clash from './containers/Clash'
 
 const store = createStore(rootReducer, applyMiddleware(thunk))
 const ws = new WebSocket(`ws://${location.host}/clash.ws`)
@@ -23,6 +24,7 @@ class Root extends Component {
           <Route path="/" component={App}>
             <IndexRedirect to="/clashes"/>
             <Route path="/clashes" component={RecentClashes}/>
+            <Route path="/clash/:clashId" component={Clash}/>
           </Route>
         </Router>
       </Provider>

@@ -4,12 +4,33 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
+  *, *:before, *:after {
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+  }
   body, html {
     height: 100%;
     margin: 0;
+    background-color:lightslategray;
   }
   ul {
     margin: 0;
+    padding: 0;
+  }
+
+  li {
+     list-style: none inside none;
+     padding: 6px;
+  }
+
+  .item {
+    background-color: ghostwhite;
+    margin: 3px;
+  }
+
+  .item:hover {
+    background-color: wheat;
   }
 </style>
 </head>
