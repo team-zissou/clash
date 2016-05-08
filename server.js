@@ -5,24 +5,16 @@ const uuid = require('node-uuid');
 const bodyParser = require('body-parser');
 const couchbase = require('couchbase');
 const nsq = require('nsq.js');
-const r = require('rethinkdb');
 
 const { createAccount, createLogin } = require('./server/accounts');
 const websocketHandler = require('./server/websocketHandler');
+
+const { subscribe, createClash } = require('./server/clashes')
 
 let conn;
 const nsqd_host = process.env.NSQD_HOST;
 const dockerhost = process.env.dockerhost;
 
-
-
-r.connect({host:dockerhost, db:'test'}, (err, c) => {
-  if (err) {
-    console.error(err);
-    process.exit(1);
-  }
-  conn = c;
-});
 
 const reader = nsq.reader({
   nsqd: [':4150'],
@@ -108,6 +100,14 @@ router.post('/accounts', (req, res) => {
 router.post('/accounts/login', (req, res) => {
   createLogin({email: "slofurno@gmail.com", password: "asdf"})
     .then(row => console.log(row));
+});
+
+router.post('/clashes', (req, res) => {
+  createClash()
+  .then(id => {
+    res.send(id)
+  })
+  .catch(err => console.error(err))
 });
 
 
