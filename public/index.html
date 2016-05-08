@@ -3,15 +3,18 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body, html {
+    height: 100%;
+    margin: 0;
+  }
+  ul {
+    margin: 0;
+  }
+</style>
 </head>
 <body>
-  <div id="root"></div>
-  <script>
-  var ws = new WebSocket(`ws://${location.host}`)
-  ws.onmessage = ({data}) => {
-    console.log(data)
-  }
-
-  </script>
+  <div id="root" style="width:100%; height:100%"></div>
+  <script src="/bundle.js"></script>
 </body>
 </html>

@@ -5,12 +5,16 @@ const subscribe = withConnection((conn, {ws}) => {
 
   const closeConn = () => conn.close()
 
-  const pushClash = (err, row) => {
+  const pushClash = (err, {new_val}) => {
     if (err) {
       console.error(err)
       return
     }
-    ws.send(JSON.stringify(row))
+    if (!new_val) {
+      console.error("clash missing new_val")
+      return
+    }
+    ws.send(JSON.stringify(Object.assign({}, {clash: new_val}, {type: "CLASH_CREATED"})))
   }
 
   const pushClashes = (err, cursor) => {
@@ -30,7 +34,7 @@ const subscribe = withConnection((conn, {ws}) => {
 
 function withConnection(fn) {
   return function(props) {
-    return r.connect({host: '127.0.0.1', db:'test'})
+    return r.connect({host: '127.0.0.1', db:'clash'})
       .then(conn => fn(conn, props))
   }
 }
