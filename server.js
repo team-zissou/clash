@@ -1,14 +1,20 @@
 const http = require('http');
 const express = require('express');
+const WebSocket = require('ws').Server;
 const uuid = require('node-uuid');
 const bodyParser = require('body-parser');
 const couchbase = require('couchbase');
 const nsq = require('nsq.js');
 const r = require('rethinkdb');
 
+const { createAccount, createLogin } = require('./server/accounts');
+const websocketHandler = require('./server/websocketHandler');
+
 let conn;
 const nsqd_host = process.env.NSQD_HOST;
 const dockerhost = process.env.dockerhost;
+
+
 
 r.connect({host:dockerhost, db:'test'}, (err, c) => {
   if (err) {
@@ -36,6 +42,11 @@ reader.on('message', function(msg){
 
 const app = express();
 const router = express.Router();
+
+const server = http.createServer();
+const wss = new WebSocket({server});
+wss.on('connection', websocketHandler);
+server.on('request', app);
 
 app.use(function readBody (req, res, next) {
     var data = '';
@@ -90,7 +101,17 @@ router.post('/run/:language', (req, res) => {
   const { langauge } = req.params;
 });
 
+router.post('/accounts', (req, res) => {
+  createAccount({email:"slofurno@gmail.com", password:"asdf", username:"papa_steve"});
+});
+
+router.post('/accounts/login', (req, res) => {
+  createLogin({email: "slofurno@gmail.com", password: "asdf"})
+    .then(row => console.log(row));
+});
+
+
 app.use(express.static('public'));
 app.use('/api', router);
 
-http.createServer(app).listen(8080);
+server.listen(8080);
