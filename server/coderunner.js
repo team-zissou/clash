@@ -16,9 +16,10 @@ function withBucket(bucket) {
 
 const withDefaultBucket = withBucket(bucket)
 
+
 function publishCode({codeId, resultId, inputId, runner}) {
   let body = JSON.stringify({codeId, resultId, inputId, runner})
-  writer.publish('jobs', body)
+  writer.publish('coderunner', body)
   setTimeout(() => {
     writer.publish(`${codeId}#ephemeral`, body)
   }, 2000)
@@ -53,8 +54,21 @@ const postCode = withDefaultBucket((bucket, obj) => {
   });
 });
 
+const getCode = withDefaultBucket((bucket, {codeId}) => {
+  return new Promise((resolve, reject) => {
+    bucket.get(codeId, (err, res) => {
+      if (err) {
+        return reject(err)
+      }
+
+      resolve(res)
+    })
+  })
+})
+
 module.exports = {
   postCode,
-  publishCode
+  publishCode,
+  getCode
 }
 

@@ -118,12 +118,15 @@ router.post('/runner', (req, res) => {
 
 router.post('/runnert', (req, res) => {
   res.sendStatus(200)
-  publishCode({
-    codeId: uuid.v4(),
-    resultId: uuid.v4(),
-    inputId: uuid.v4(),
-    runner: "js"
-  })
+  postCode(exampleCode)
+  .then(id =>
+    publishCode({
+      codeId: id,
+      resultId: uuid.v4(),
+      inputId: uuid.v4(),
+      runner: "js"
+    })
+  )
 })
 
 router.post('/questions', (req, res) => {
