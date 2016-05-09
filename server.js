@@ -9,7 +9,7 @@ const nsq = require('nsq.js');
 const { createAccount, createLogin } = require('./server/accounts');
 const websocketHandler = require('./server/websocketHandler');
 
-const { subscribe, createClash } = require('./server/clashes')
+const { subscribe, createClash, joinClash, leaveClash } = require('./server/clashes')
 
 let conn;
 const nsqd_host = process.env.NSQD_HOST;
@@ -110,6 +110,23 @@ router.post('/clashes', (req, res) => {
   .catch(err => console.error(err))
 });
 
+router.post('/clashes/:clashId/join', (req, res) => {
+ // const x = JSON.parse(req.body)
+  const { clashId } = req.params
+  joinClash({clashId, userId: '12345'})
+   .then(x => {
+      res.sendStatus(200)
+   })
+})
+
+router.post('/clashes/:clashId/leave', (req, res) => {
+ // const x = JSON.parse(req.body)
+  const { clashId } = req.params
+  leaveClash({clashId, userId: '12345'})
+   .then(x => {
+      res.sendStatus(200)
+   })
+})
 
 app.use(express.static('public'));
 app.use('/api', router);

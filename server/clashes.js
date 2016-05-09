@@ -48,9 +48,40 @@ function withConnection(fn) {
   }
 }
 
+function withRethink(fn) {
+  return function(props) {
+    return r.connect({host: '127.0.0.1', db:'clash'})
+      .then(conn => {
+        return fn(conn, props)
+        //run result before conn close
+          .then(result => {
+            conn.close()
+            return result
+          })
+      })
+      .catch(err => {
+        console.log(err)
+      })
+  }
+}
+
+const joinClash = withRethink((conn, {clashId, userId}) => {
+  return r.table('clashes')
+    .get(clashId)
+    .update({players: r.row('players').append(userId)})
+    .run(conn)
+})
+
+const leaveClash = withRethink((conn, {clashId, userId}) => {
+  return r.table('clashes')
+    .get(clashId)
+    .update({players: r.row('players').filter((player) => player.ne(userId))})
+    .run(conn)
+})
+
 const createClash = withConnection((conn, props) => {
   return r.table('clashes')
-    .insert({created: Date.now()})
+    .insert({created: Date.now(), players: [], clashId: uuid.v4()})
     .run(conn)
     .then(({generated_keys}) => {
       conn.close()
@@ -61,5 +92,7 @@ const createClash = withConnection((conn, props) => {
 
 module.exports = {
   subscribe,
-  createClash
+  createClash,
+  joinClash,
+  leaveClash,
 }

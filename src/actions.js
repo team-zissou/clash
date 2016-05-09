@@ -25,6 +25,7 @@ function addClash(clash) {
 
 function messageHandler(dispatch, {data}) {
   const action = JSON.parse(data)
+  console.log(data)
   switch(action.type) {
   case CLASH_CREATED:
     return dispatch(addClash(action.clash))
