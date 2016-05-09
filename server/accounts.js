@@ -1,14 +1,52 @@
 const bcrypt = require('bcrypt-nodejs');
 const pg = require('pg');
 
-const dockerhost = process.env.dockerhost;
+const dockerhost = process.env.dockerhost || '127.0.0.1'
 const psqlstring = `postgres://postgres:postgres@${dockerhost}/postgres`;
 const uuid = require('node-uuid');
 
-module.exports = {
-  createAccount,
-  createLogin
-};
+function withConnection(fn) {
+  return function(props) {
+    return new Promise((resolve, reject) => {
+      pg.connect(psqlstring, (err, client, done) => {
+        if (err) {
+          reject(err)
+          return
+        }
+
+        let query = fn(client, props)
+
+        query.on('row', function(row, result) {
+         result.addRow(row);
+        })
+        query.on('error', function(error) {
+          reject(error)
+        })
+        query.on('end', function(result) {
+          resolve(result)
+        })
+      })
+    })
+  }
+}
+
+const createQuestion = withConnection((client, {id, owner, question}) => {
+  return client.query(`INSERT INTO questions (id, owner, question)
+      VALUES ($1, $2, $3)`, [id, owner, question])
+})
+
+const createTest = withConnection((client, {id, question, input, output}) => {
+  return client.query(`INSERT INTO tests (id, question, input, output)
+      VALUES ($1, $2, $3, $4)`, [id, question, input, output])
+})
+
+const getTests = withConnection((client, {question}) => {
+  return client.query(`SELECT * FROM tests WHERE question = $1`, [question])
+})
+
+const getQuestions = withConnection((client) => {
+  return client.query(`SELECT * FROM questions`)
+})
 
 function createAccount({email, password, username}) {
   let hashedPassword = bcrypt.hashSync(password);
@@ -77,3 +115,13 @@ function createLogin({email, password}) {
     .then(_createLogin)
     .catch(err => console.log(err));
 }
+
+module.exports = {
+  createAccount,
+  createLogin,
+  createQuestion,
+  createTest,
+  getTests,
+  getQuestions
+};
+

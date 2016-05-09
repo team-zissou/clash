@@ -4,7 +4,7 @@ const WebSocket = require('ws').Server;
 const uuid = require('node-uuid');
 const bodyParser = require('body-parser');
 
-const { createAccount, createLogin } = require('./server/accounts');
+const { createAccount, createLogin, createQuestion, createTest, getTests, getQuestions } = require('./server/accounts');
 const websocketHandler = require('./server/websocketHandler');
 
 const { subscribe, createClash, joinClash, leaveClash } = require('./server/clashes')
@@ -126,6 +126,55 @@ router.post('/runnert', (req, res) => {
   })
 })
 
+router.post('/questions', (req, res) => {
+  let question = {
+    id: uuid.v4(),
+    owner: "slofurno",
+    question: "find the intersection of the two sets"
+  }
+  createQuestion(question)
+  .then(result => {
+    res.json(question)
+  })
+  .catch(err => console.log(err))
+})
+
+router.get('/questions', (req, res) => {
+  getQuestions()
+    .then(({rows}) => res.json(rows))
+    .catch(err => console.log(err))
+
+})
+
+router.post('/questions/:question/tests', (req, res) => {
+  const { question } = req.params
+  const input = `1 5 8 9 14
+  3 6 8 10 14`
+
+  const output = `8 14`
+
+  let test = {
+    id: uuid.v4(),
+    question,
+    input,
+    output
+  }
+
+  createTest(test)
+  .then(() => {
+    res.json(test)
+  })
+  .catch(err => console.log(err))
+})
+
+router.get('/questions/:question/tests', (req, res) => {
+  const { question } = req.params
+  getTests({question})
+  .then(({rows}) => {
+    res.json(rows)
+  })
+  .catch(err => console.log(err))
+})
 
 app.use(express.static('public'));
 app.use('/api', router);
