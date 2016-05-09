@@ -3,34 +3,12 @@ const express = require('express');
 const WebSocket = require('ws').Server;
 const uuid = require('node-uuid');
 const bodyParser = require('body-parser');
-const couchbase = require('couchbase');
-const nsq = require('nsq.js');
 
 const { createAccount, createLogin } = require('./server/accounts');
 const websocketHandler = require('./server/websocketHandler');
 
 const { subscribe, createClash, joinClash, leaveClash } = require('./server/clashes')
-
-let conn;
-const nsqd_host = process.env.NSQD_HOST;
-const dockerhost = process.env.dockerhost;
-
-
-const reader = nsq.reader({
-  nsqd: [':4150'],
-  maxInFlight: 1,
-  maxAttempts: 5,
-  topic: 'events',
-  channel: 'ingestion'
-});
-reader.on('error', function(err){
-    console.log(err.stack);
-});
-reader.on('message', function(msg){
-  var body = msg.body.toString();
-  console.log('%s attempts=%s', body, msg.attempts);
-  msg.requeue(2000);
-});
+const { postCode, publishCode } = require('./server/coderunner')
 
 const app = express();
 const router = express.Router();
@@ -89,10 +67,6 @@ router.post('/events', (req, res) => {
   });
 });
 
-router.post('/run/:language', (req, res) => {
-  const { langauge } = req.params;
-});
-
 router.post('/accounts', (req, res) => {
   createAccount({email:"slofurno@gmail.com", password:"asdf", username:"papa_steve"});
 });
@@ -127,6 +101,31 @@ router.post('/clashes/:clashId/leave', (req, res) => {
       res.sendStatus(200)
    })
 })
+
+const exampleCode = {
+  code: `console.log("hello world")`,
+  runner: "js",
+}
+
+router.post('/runner', (req, res) => {
+  postCode(exampleCode)
+    .then(x => {
+      console.log(x)
+      res.sendStatus(200)
+    })
+    .catch(x => console.log(x))
+})
+
+router.post('/runnert', (req, res) => {
+  res.sendStatus(200)
+  publishCode({
+    codeId: uuid.v4(),
+    resultId: uuid.v4(),
+    inputId: uuid.v4(),
+    runner: "js"
+  })
+})
+
 
 app.use(express.static('public'));
 app.use('/api', router);

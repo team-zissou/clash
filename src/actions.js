@@ -16,6 +16,7 @@ function connectHandler(dispatch) {
   }
 }
 
+//TODO: rename update clash
 function addClash(clash) {
   return {
     type: CLASH_CREATED,

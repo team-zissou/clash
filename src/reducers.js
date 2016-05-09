@@ -4,10 +4,10 @@ import {
   CLASH_CREATED
 } from './actions'
 
-function clashes(state = [], action) {
+function clashes(state = {}, action) {
   switch(action.type) {
   case CLASH_CREATED:
-    return state.concat(action.clash)
+    return {...state, [action.clash.id]: action.clash}
   default:
     return state
   }
