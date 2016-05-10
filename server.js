@@ -16,7 +16,7 @@ const {
 } = require('./server/accounts')
 const websocketHandler = require('./server/websocketHandler')
 
-const { subscribe, createClash, joinClash, leaveClash } = require('./server/clashes')
+const { subscribe, createClash, joinClash, leaveClash, getClash } = require('./server/clashes')
 const { postCode, publishCode } = require('./server/coderunner')
 
 const app = express()
@@ -76,12 +76,23 @@ router.post('/accounts/login', (req, res) => {
 })
 
 router.post('/clashes', authed((req, res) => {
-  createClash()
-  .then(id => {
-    res.send(id)
-  })
+  const clash = {
+    id: uuid.v4(),
+    question: '7d43c01d-09ad-4928-8ca0-df8bcbd5ee3b'
+  }
+
+  createClash(clash)
+  .then(() => res.json(clash))
   .catch(err => console.error(err))
 }))
+
+router.get('/clashes/:clashId', (req, res) => {
+  const { clashId } = req.params
+
+  getClash({id: clashId})
+    .then(result => res.json(result))
+    .catch(err => console.error(err))
+})
 
 router.post('/clashes/:clashId/join', authed((req, res) => {
  // const x = JSON.parse(req.body)

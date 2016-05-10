@@ -79,20 +79,24 @@ const leaveClash = withRethink((conn, {clashId, userId}) => {
     .run(conn)
 })
 
-const createClash = withConnection((conn, props) => {
+const createClash = withConnection((conn, {id, question}) => {
   return r.table('clashes')
-    .insert({created: Date.now(), players: [], clashId: uuid.v4()})
+    .insert({id, created: Date.now(), players: [], question})
     .run(conn)
-    .then(({generated_keys}) => {
-      conn.close()
-      return generated_keys[0]
-    })
+    .then(() => conn.close())
     .catch(err => console.log(err))
+})
+
+const getClash = withConnection((conn, {id}) => {
+  return r.table('clashes')
+    .get(id)
+    .run(conn)
 })
 
 module.exports = {
   subscribe,
   createClash,
+  getClash,
   joinClash,
   leaveClash,
 }
