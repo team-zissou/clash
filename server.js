@@ -1,106 +1,106 @@
-const http = require('http');
-const express = require('express');
-const WebSocket = require('ws').Server;
-const uuid = require('node-uuid');
-const bodyParser = require('body-parser');
+const http = require('http')
+const express = require('express')
+const WebSocket = require('ws').Server
+const uuid = require('node-uuid')
+const bodyParser = require('body-parser')
 
-const { createAccount, createLogin, createQuestion, createTest, getTests, getQuestions } = require('./server/accounts');
-const websocketHandler = require('./server/websocketHandler');
+const {
+  createAccount,
+  createLogin,
+  createQuestion,
+  createTest,
+  getTests,
+  getQuestions,
+  getAccount,
+  _createLogin,
+} = require('./server/accounts')
+const websocketHandler = require('./server/websocketHandler')
 
 const { subscribe, createClash, joinClash, leaveClash } = require('./server/clashes')
 const { postCode, publishCode } = require('./server/coderunner')
 
-const app = express();
-const router = express.Router();
+const app = express()
+const router = express.Router()
 
-const server = http.createServer();
-const wss = new WebSocket({server});
-wss.on('connection', websocketHandler);
-server.on('request', app);
+const server = http.createServer()
+const wss = new WebSocket({server})
+wss.on('connection', websocketHandler)
+server.on('request', app)
+
+function authed (fn) {
+  return function(req, res) {
+    const { authorization } = req.headers
+    if (!authorization) {
+      return res.sendStatus(401)
+    }
+
+    getAccount({loginToken: authorization})
+      .then(({rows}) => {
+        if (rows.length) {
+          const { id, email, username } = rows[0]
+          console.log("authed as ", id, email, username)
+          req.user = { id, email, username }
+          fn(req, res)
+        } else {
+          res.sendStatus(401)
+        }
+      })
+      .catch(xs => console.error(xs))
+  }
+}
 
 app.use(function readBody (req, res, next) {
-    var data = '';
-    req.setEncoding('utf8');
+    var data = ''
+    req.setEncoding('utf8')
     req.on('data', function(chunk) {
-        data += chunk;
-    });
+        data += chunk
+    })
     req.on('end', function() {
-        req.body = data;
-        next();
-    });
-});
+        req.body = data
+        next()
+    })
+})
 
-router.post('/todos', (req, res) => {
-  let body = req.body;
-  r.table('todos').insert({todo: body}).run(conn, (err, row) => {
-    res.send(row.generated_keys[0])
-  });
-});
-
-router.get('/todos/:id', (req, res) => {
-  const { id } = req.params;
-  let todos = [];
-  r.table('todos').filter({id}).run(conn, (err, cursor) => {
-    cursor.toArray((err, arr) => {
-      res.json(arr);
-    });
-  });
-});
-
-router.get('/todos', (req, res) => {
-  r.table('todos').run(conn, (err, cursor) => {
-    cursor.toArray((err, arr) => {
-      res.json(arr);
-    });
-  })
-});
-
-router.post('/events', (req, res) => {
-  const writer = nsq.writer(':4150');
-  writer.on('error', function(err){
-      console.log(err.stack);
-  });
-  writer.on('ready', () => {
-    writer.publish('events', 'foo');
-    writer.publish('events', 'bar');
-    writer.publish('events', 'baz');
-  });
-});
 
 router.post('/accounts', (req, res) => {
-  createAccount({email:"slofurno@gmail.com", password:"asdf", username:"papa_steve"});
-});
+  const id = uuid.v4()
+  createAccount({id, email:"slofurno@gmail.com", password:"asdf", username:"papa_steve"})
+    .then(() => _createLogin({accountId: id}))
+    .then(({accountId, id}) => res.json({accountId, token: id}))
+    .catch(err => console.error(err))
+})
 
 router.post('/accounts/login', (req, res) => {
   createLogin({email: "slofurno@gmail.com", password: "asdf"})
-    .then(row => console.log(row));
-});
+    .then(row => console.log(row))
+})
 
-router.post('/clashes', (req, res) => {
+router.post('/clashes', authed((req, res) => {
   createClash()
   .then(id => {
     res.send(id)
   })
   .catch(err => console.error(err))
-});
+}))
 
-router.post('/clashes/:clashId/join', (req, res) => {
+router.post('/clashes/:clashId/join', authed((req, res) => {
  // const x = JSON.parse(req.body)
   const { clashId } = req.params
-  joinClash({clashId, userId: '12345'})
+  const { user } = req
+  joinClash({clashId, user})
    .then(x => {
       res.sendStatus(200)
    })
-})
+}))
 
-router.post('/clashes/:clashId/leave', (req, res) => {
+router.post('/clashes/:clashId/leave', authed((req, res) => {
  // const x = JSON.parse(req.body)
   const { clashId } = req.params
-  leaveClash({clashId, userId: '12345'})
+  leaveClash({clashId, userId: req.user.id})
    .then(x => {
       res.sendStatus(200)
    })
-})
+}))
 
 const exampleCode = {
   code: `console.log("hello world")`,
@@ -116,7 +116,7 @@ router.post('/runner', (req, res) => {
     .catch(x => console.log(x))
 })
 
-router.post('/runnert', (req, res) => {
+router.post('/runnert', authed((req, res) => {
   res.sendStatus(200)
   postCode(exampleCode)
     .then(id =>
@@ -127,7 +127,7 @@ router.post('/runnert', (req, res) => {
         runner: "js"
       })
     )
-})
+}))
 
 router.post('/questions', (req, res) => {
   let question = {
@@ -180,7 +180,7 @@ router.get('/questions/:question/tests', (req, res) => {
     .catch(err => console.log(err))
 })
 
-app.use(express.static('public'));
-app.use('/api', router);
+app.use(express.static('public'))
+app.use('/api', router)
 
-server.listen(8080);
+server.listen(8080)

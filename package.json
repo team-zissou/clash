@@ -6,7 +6,8 @@
   "scripts": {
     "start": "npm install && node server",
     "test": "mocha --opts mocha.opts",
-    "test:watch": "npm test -- --watch --reporter min"
+    "test:watch": "npm test -- --watch --reporter min",
+    "webpack": "webpack -w -c"
   },
   "author": "slofurno",
   "license": "MPL2.0",

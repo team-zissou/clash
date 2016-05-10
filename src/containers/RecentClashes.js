@@ -16,7 +16,7 @@ class RecentClashes extends Component {
                 <div className="item" key={i} onClick={() => browserHistory.push(`/clash/${id}`)}>
                   <li>{humanTime(created, now)}</li>
                   <ul>
-                    {players.map((x,i) => <li key={i}>{x}</li>)}
+                    {players.map(({email, username},i) => <li key={i}>{username}</li>)}
                   </ul>
                 </div>
               )

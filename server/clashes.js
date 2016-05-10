@@ -65,17 +65,17 @@ function withRethink(fn) {
   }
 }
 
-const joinClash = withRethink((conn, {clashId, userId}) => {
+const joinClash = withRethink((conn, {clashId, user}) => {
   return r.table('clashes')
     .get(clashId)
-    .update({players: r.row('players').append(userId)})
+    .update({players: r.row('players').append(user)})
     .run(conn)
 })
 
 const leaveClash = withRethink((conn, {clashId, userId}) => {
   return r.table('clashes')
     .get(clashId)
-    .update({players: r.row('players').filter((player) => player.ne(userId))})
+    .update({players: r.row('players').filter((player) => player('id').ne(userId))})
     .run(conn)
 })
 
