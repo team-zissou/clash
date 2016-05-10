@@ -60,8 +60,8 @@ const getCode = withDefaultBucket((bucket, {codeId}) => {
       if (err) {
         return reject(err)
       }
-
-      resolve(res)
+      let {cas, value} = res
+      resolve(value)
     })
   })
 })

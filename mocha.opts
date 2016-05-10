@@ -1,2 +1,5 @@
 --compilers js:babel-register
-@(test)/*_test.js
+--recursive
+@(src)/**/*_test.js
+@(coderunner)/**/*_test.js
+@(server)/**/*_test.js

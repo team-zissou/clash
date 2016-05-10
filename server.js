@@ -119,14 +119,14 @@ router.post('/runner', (req, res) => {
 router.post('/runnert', (req, res) => {
   res.sendStatus(200)
   postCode(exampleCode)
-  .then(id =>
-    publishCode({
-      codeId: id,
-      resultId: uuid.v4(),
-      inputId: uuid.v4(),
-      runner: "js"
-    })
-  )
+    .then(id =>
+      publishCode({
+        codeId: id,
+        resultId: uuid.v4(),
+        inputId: uuid.v4(),
+        runner: "js"
+      })
+    )
 })
 
 router.post('/questions', (req, res) => {
@@ -135,11 +135,12 @@ router.post('/questions', (req, res) => {
     owner: "slofurno",
     question: "find the intersection of the two sets"
   }
+
   createQuestion(question)
-  .then(result => {
-    res.json(question)
-  })
-  .catch(err => console.log(err))
+    .then(result => {
+      res.json(question)
+    })
+    .catch(err => console.log(err))
 })
 
 router.get('/questions', (req, res) => {
@@ -164,19 +165,19 @@ router.post('/questions/:question/tests', (req, res) => {
   }
 
   createTest(test)
-  .then(() => {
-    res.json(test)
-  })
-  .catch(err => console.log(err))
+    .then(() => {
+      res.json(test)
+    })
+    .catch(err => console.log(err))
 })
 
 router.get('/questions/:question/tests', (req, res) => {
   const { question } = req.params
   getTests({question})
-  .then(({rows}) => {
-    res.json(rows)
-  })
-  .catch(err => console.log(err))
+    .then(({rows}) => {
+      res.json(rows)
+    })
+    .catch(err => console.log(err))
 })
 
 app.use(express.static('public'));
