@@ -1,11 +1,14 @@
 const os = require('os')
 const fs = require('fs')
+const diff = require('diff')
 const child_process = require('child_process')
 
 const uuid = require('node-uuid')
 const nsq = require('nsq.js');
 
-const { getCode } = require('../server/coderunner')
+const { getCode, postCode } = require('../server/coderunner')
+const { getInput } = require('../server/accounts')
+
 const tempDir = os.tmpdir()
 const codef = `${tempDir}/${uuid.v4()}`
 
@@ -18,7 +21,7 @@ function processJob() {
   }
 
   inProgress = true
-  let [{code, resultId, runner, input}, ...xs] = jobs
+  let [{code, resultId, runner, input, output}, ...xs] = jobs
   jobs = xs
 
   let fd = fs.openSync(codef, 'w+')
@@ -37,8 +40,11 @@ function processJob() {
     if (err) {
       console.error(err)
     } else {
-      console.log(stdout)
-      console.log(stderr)
+      console.log("stdout: ", stdout)
+      console.log("expected: ", output)
+      let dx = diff.diffLines(output, stdout, {ignoreWhitespace: true})
+      postCode({id: resultId, code: dx})
+      console.log(dx)
     }
     inProgress = false
   }
@@ -64,12 +70,12 @@ reader.on('message', function(msg) {
   let job = JSON.parse(body.toString())
   const { codeId, resultId, inputId, runner } = job
 
-  getCode(job)
-  .then(({code, runner}) => jobs = jobs.concat({code, resultId, runner, input:"TODO"}))
-  .catch(err => {
-    console.log("error getting code")
-    console.log(err)
+  Promise.all([getCode(job), getInput({ id: inputId })])
+  .then(([{ code, runner }, { ['rows']: [{ input, output }] }]) => {
+    jobs = jobs.concat({ code, resultId, runner, input, output })
   })
+  .catch(err => console.log(err))
+
   msg.finish();
 });
 

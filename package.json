@@ -15,6 +15,7 @@
     "bcrypt-nodejs": "0.0.3",
     "body-parser": "^1.15.1",
     "couchbase": "^2.1.6",
+    "diff": "^2.2.2",
     "express": "^4.13.4",
     "node-uuid": "^1.4.7",
     "nsq.js": "^0.14.5",

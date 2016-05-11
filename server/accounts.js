@@ -45,6 +45,10 @@ const getTests = withConnection((client, {question}) => {
   return client.query(`SELECT * FROM tests WHERE question = $1`, [question])
 })
 
+const getInput = withConnection((client, {id}) => {
+  return client.query(`SELECT * FROM tests WHERE id = $1`, [id])
+})
+
 const getQuestions = withConnection((client) => {
   return client.query(`SELECT * FROM questions`)
 })
@@ -64,6 +68,11 @@ const createAccount = withConnection((client, {id, email, password, username}) =
 
   return client.query(`INSERT INTO accounts (id, email, password, username)
         VALUES($1, $2, $3, $4)`, [id, email, hashedPassword, username])
+})
+
+const createCodeRecord = withConnection((client, {codeId, accountId, resultId, inputId, runner}) => {
+  return client.query(`INSERT INTO code (id, accountId, resultId, inputId, runner)
+      VALUES ($1, $2, $3, $4, $5)`, [codeId, accountId, resultId, inputId, runner])
 })
 
 function lookupAccount({email}) {
@@ -121,6 +130,8 @@ module.exports = {
   createTest,
   getTests,
   getQuestions,
-  _createLogin
+  _createLogin,
+  createCodeRecord,
+  getInput
 }
 

@@ -13,11 +13,12 @@ const {
   getQuestions,
   getAccount,
   _createLogin,
+  createCodeRecord,
 } = require('./server/accounts')
 const websocketHandler = require('./server/websocketHandler')
 
 const { subscribe, createClash, joinClash, leaveClash, getClash } = require('./server/clashes')
-const { postCode, publishCode } = require('./server/coderunner')
+const { postCode, publishCode, getCode } = require('./server/coderunner')
 
 const app = express()
 const router = express.Router()
@@ -118,27 +119,65 @@ const exampleCode = {
   runner: "js",
 }
 
-router.post('/runner', (req, res) => {
-  postCode(exampleCode)
-    .then(x => {
-      console.log(x)
-      res.sendStatus(200)
-    })
-    .catch(x => console.log(x))
-})
+const intersectCode = {
+	code: `
+		function numericSort(a, b) {
+			return a - b
+		}
+		function intersect(xs1 = [], ys1 = []) {
+			let xs = xs1.slice()
+			let ys = ys1.slice()
+			xs.sort(numericSort)
+			ys.sort(numericSort)
+			let i = 0
+			let j = 0
+			let acc = []
+			for(;i < xs.length && j < ys.length;) {
+				if (xs[i] < ys[j]) {
+					i++
+				} else if (ys[j] < xs[i]) {
+					j++
+				} else {
+					acc.push(xs[i])
+					i++
+					j++
+				}
+			}
+			return acc
+		}
+		var lines = input.split("\\n");
+    var a = lines[0].split(" ").map(Number);
+    var b = lines[1].split(" ").map(Number);
+    var c = intersect(a, b);
+    console.log(c.join(" "));
+	`,
+	runner: "js"
+}
 
-router.post('/runnert', authed((req, res) => {
-  res.sendStatus(200)
-  postCode(exampleCode)
-    .then(id =>
-      publishCode({
-        codeId: id,
-        resultId: uuid.v4(),
-        inputId: uuid.v4(),
-        runner: "js"
-      })
-    )
+router.post('/runner', authed((req, res) => {
+  const { id } = req.user
+  const pc = {
+    accountId: id,
+    codeId: uuid.v4(),
+    resultId: uuid.v4(),
+    inputId: "7cdf0a3d-8cf4-4073-a8da-d58d91282b14",
+    runner: "js"
+  }
+
+  postCode({id: pc.codeId, code: intersectCode})
+    .then(() => publishCode(pc))
+    .then(() => createCodeRecord(pc))
+    .catch(err => console.log(err))
+
+  res.json(pc)
 }))
+
+router.get('/runner/results/:codeId', (req, res) => {
+  const { codeId } = req.params
+  getCode({codeId})
+    .then(x => res.json(x))
+    .catch(x => res.json(x))
+})
 
 router.post('/questions', (req, res) => {
   let question = {
