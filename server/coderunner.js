@@ -51,8 +51,14 @@ function awaitCodeResult({codeId}) {
 }
 
 function publishCode({codeId, resultId, inputId, runner}) {
-  let body = JSON.stringify({codeId, resultId, inputId, runner})
-  writer.publish('coderunner', body)
+  return new Promise((resolve, reject) => {
+    let body = JSON.stringify({codeId, resultId, inputId, runner})
+    writer.publish('coderunner', body, function() {
+      resolve(true)
+    })
+  })
+
+  //////////////
   setTimeout(() => {
     writer.publish(`${codeId}#ephemeral`, body)
   }, 2000)

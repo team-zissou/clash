@@ -154,29 +154,55 @@ const intersectCode = {
 	runner: "js"
 }
 
-router.post('/runner', authed((req, res) => {
-  const { id } = req.user
-  const pc = {
-    accountId: id,
-    codeId: uuid.v4(),
-    resultId: uuid.v4(),
-    inputId: "7cdf0a3d-8cf4-4073-a8da-d58d91282b14",
-    runner: "js"
-  }
+//TODO: maybe its better to give the user all question tests,
+//and make one runner call per test?
+ router.post('/runner', authed((req, res) => {
+   const { id } = req.user
+   const pc = {
+     accountId: id,
+     codeId: uuid.v4(),
+     resultId: uuid.v4(),
+     inputId: "7cdf0a3d-8cf4-4073-a8da-d58d91282b14",
+     runner: "js"
+   }
+   postCode({id: pc.codeId, code: intersectCode})
+     .then(() => publishCode(pc))
+     .then(() => createCodeRecord(pc))
+     .catch(err => console.log(err))
+   res.json(pc)
+ })
 
-  postCode({id: pc.codeId, code: intersectCode})
-    .then(() => publishCode(pc))
-    .then(() => createCodeRecord(pc))
-    .catch(err => console.log(err))
+router.post('/runner/:question', authed((req, res) => {
+  const accountId = req.user.id
+  const { question } = req.params
+  const codeId = uuid.v4()
 
-  res.json(pc)
+  postCode({id: codeId, code: intersectCode})
+  .then(() => getTests({question}))
+  .then(({rows}) => {
+    let jobs = rows.map(({id}) => {
+      let job = {
+        accountId,
+        codeId,
+        resultId: uuid.v4(),
+        inputId: id,
+        runner: "js"
+      }
+      return publishCode(job)
+        .then(() => createCodeRecord(job))
+        .then(() => job.resultId)
+    })
+    return Promise.all(jobs)
+  })
+  .then(resultIds => res.json(resultIds))
+  .catch(err => console.log(err))
 }))
 
 router.get('/runner/results/:codeId', (req, res) => {
   const { codeId } = req.params
   getCode({codeId})
     .then(x => res.json(x))
-    .catch(x => res.json(x))
+    .catch(x => res.sendStatus(501))
 })
 
 router.post('/questions', (req, res) => {

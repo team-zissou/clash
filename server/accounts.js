@@ -42,7 +42,7 @@ const createTest = withConnection((client, {id, question, input, output}) => {
 })
 
 const getTests = withConnection((client, {question}) => {
-  return client.query(`SELECT * FROM tests WHERE question = $1`, [question])
+  return client.query(`SELECT id FROM tests WHERE question = $1`, [question])
 })
 
 const getInput = withConnection((client, {id}) => {
