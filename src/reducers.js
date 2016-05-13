@@ -1,13 +1,23 @@
 import { combineReducers } from 'redux'
 import {
   WEBSOCKET_CONNECTED,
-  CLASH_CREATED
+  CLASH_CREATED,
+  ADD_QUESTION_SUCCESS
 } from './actions'
 
 function clashes(state = {}, action) {
   switch(action.type) {
   case CLASH_CREATED:
     return {...state, [action.clash.id]: action.clash}
+  default:
+    return state
+  }
+}
+
+function questions(state = {}, action) {
+  switch(action.type) {
+  case ADD_QUESTION_SUCCESS:
+    return {...state, [action.question.id]: action.question}
   default:
     return state
   }
@@ -24,7 +34,8 @@ function socket(state = null, action) {
 
 const rootReducer = combineReducers({
   clashes,
-  socket
+  socket,
+  questions
 })
 
 export default rootReducer

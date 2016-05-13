@@ -11,6 +11,7 @@ const {
   createTest,
   getTests,
   getQuestions,
+  getQuestion,
   getAccount,
   _createLogin,
   createCodeRecord,
@@ -170,7 +171,7 @@ const intersectCode = {
      .then(() => createCodeRecord(pc))
      .catch(err => console.log(err))
    res.json(pc)
- })
+ }))
 
 router.post('/runner/:question', authed((req, res) => {
   const accountId = req.user.id
@@ -205,7 +206,7 @@ router.get('/runner/results/:codeId', (req, res) => {
     .catch(x => res.sendStatus(501))
 })
 
-router.post('/questions', (req, res) => {
+router.post('/questions', authed((req, res) => {
   let question = {
     id: uuid.v4(),
     owner: "slofurno",
@@ -213,17 +214,26 @@ router.post('/questions', (req, res) => {
   }
 
   createQuestion(question)
-    .then(result => {
-      res.json(question)
-    })
+    .then(result => res.json(question))
     .catch(err => console.log(err))
-})
+}))
 
 router.get('/questions', (req, res) => {
   getQuestions()
     .then(({rows}) => res.json(rows))
     .catch(err => console.log(err))
 
+})
+
+router.get('/questions/:id', (req, res) => {
+  const { id } = req.params
+  getQuestion({id})
+    .then(({rows}) => {
+      const question = rows[0].question
+      const tests = rows.map(({input, output}) => ({input,output}))
+      res.json({ question, tests })
+    })
+    .catch(err => console.log(err))
 })
 
 router.post('/questions/:question/tests', (req, res) => {
@@ -250,9 +260,7 @@ router.post('/questions/:question/tests', (req, res) => {
 router.get('/questions/:question/tests', (req, res) => {
   const { question } = req.params
   getTests({question})
-    .then(({rows}) => {
-      res.json(rows)
-    })
+    .then(({rows}) => res.json(rows))
     .catch(err => console.log(err))
 })
 

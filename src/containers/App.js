@@ -6,8 +6,10 @@ class App extends Component {
     const { children } = this.props
 
     return (
-      <div style={{width: '100%', height: '100%', backgroundColor: 'lightslategray'}}>
+      <div style={{width: '100%', height: '100%', backgroundColor: 'lightslategray', padding: "6px"}}>
+        <div className="content">
         { children }
+        </div>
       </div>
     )
   }

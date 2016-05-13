@@ -53,6 +53,13 @@ const getQuestions = withConnection((client) => {
   return client.query(`SELECT * FROM questions`)
 })
 
+const getQuestion = withConnection((client, {id}) => {
+  return client.query(`SELECT questions.question, tests.input, tests.output FROM questions
+      LEFT JOIN tests
+      ON questions.id = tests.question
+      WHERE questions.id = $1`, [id])
+})
+
 const getAccount = withConnection((client, {loginToken}) => {
   const query = `
     SELECT accounts.* FROM logins
@@ -132,6 +139,7 @@ module.exports = {
   getQuestions,
   _createLogin,
   createCodeRecord,
-  getInput
+  getInput,
+  getQuestion,
 }
 

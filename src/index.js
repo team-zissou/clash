@@ -4,12 +4,15 @@ import { Router, Route, browserHistory, IndexRedirect } from 'react-router'
 import { render } from 'react-dom'
 import { createStore, applyMiddleware } from 'redux'
 import thunk from 'redux-thunk'
+
 import rootReducer from './reducers'
 import { connectWebsocket } from './actions'
 
 import App from './containers/App'
 import RecentClashes from './containers/RecentClashes'
 import Clash from './containers/Clash'
+import Questions from './containers/Questions'
+import Question from './containers/Question'
 
 const store = createStore(rootReducer, applyMiddleware(thunk))
 const ws = new WebSocket(`ws://${location.host}/clash.ws`)
@@ -25,6 +28,8 @@ class Root extends Component {
             <IndexRedirect to="/clashes"/>
             <Route path="/clashes" component={RecentClashes}/>
             <Route path="/clash/:clashId" component={Clash}/>
+            <Route path="/questions" component={Questions}/>
+            <Route path="/questions/:questionId" component={Question}/>
           </Route>
         </Router>
       </Provider>
